@@ -1,0 +1,57 @@
+title: Dll Sideloading
+description: Detection of malicious DLL file creation or execution
+status: experimental
+date: 24/07/2025
+author: Manish Rawat
+
+logsource:
+  product: windows
+  service: sysmon
+  defination: EventID 1, 7, 11 are used
+
+detection:
+  selection:
+    EventID: 
+      - 1
+      - 7
+      - 11
+  selection_Timebased:
+    @timestamp|gte: "22:00:00"
+    @timestamp|lte: "06:00:00"
+  filter_admin:
+      User|contains:
+        - 'admin'
+        - 'administrative'
+        - 'it'
+        - 'service'
+        - 'system'
+  selection_Location_EventID7:
+      EventID: 7
+      ImageLoaded|contains:
+        - \\temp\\
+        - \\downloads\\
+        - \\local\\
+  selection_Location_EventID11:
+      EventID: 11
+      TargetFilename|contains:
+        - \\temp\\
+        - \\downloads\\
+        - \\local\\
+  selection_Process:
+    EventID: 1
+    Image|endswith: '\regsvr32.exe'
+  selection_commands:
+    CommandLine|contains:
+      - "takedown"
+      - "icacls"
+      - "del"
+
+  condition: 
+    (selection_Process and selection_commands and not filter_admin) 
+    or 
+    (selection and selection_Timebased and not filter_admin) and (selection_Location_EventID7 or selection_Location_EventID11)
+tags:
+  - apt29
+  - attack.t1574.002
+  - Dll.Sideloading
+level: medium
