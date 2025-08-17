@@ -1,0 +1,52 @@
+title: Detecting Powershell with Encoded Commands
+
+description: Detecting attackers using malicious encoded commands 
+
+status: experimental
+
+author: Manish Rawat
+
+logsource:
+    product: windows
+    category : process_creation
+    service: sysmon
+    definition: Event ID 1, 3, 7, 11 are used
+
+detection:
+    selection:
+        EventID: 1
+        Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+    
+    selection_Parameter:
+        CommandLine|contains:
+            - '-encoded'
+            - '-enc' 
+            - '-e' 
+            - '-EncodedCommand'
+            - '-en' 
+            - '-enco' 
+    selection_workstation:
+        ComputerName|contains:
+            - sales
+            - hr
+            - seo 
+    selection_Process:
+        ParentImage|contains:
+            - winword.exe
+            - excel.exe
+            - outlook.exe
+            - wscript.exe
+            - mshta.exe
+    selection_network:
+        CommandLine|contains:
+            - wget
+            - curl
+            - Invoke-WebRequest
+    condition: selection and (selection_Parameter or (selection_Process and selection_workstation) or selection_network)
+
+tags:
+    - apt29
+    - attack.T1059.001
+    - powershell.encoded.commands
