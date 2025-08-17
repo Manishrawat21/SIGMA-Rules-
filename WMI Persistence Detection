@@ -1,0 +1,40 @@
+# RULE 1:-
+
+title: Detect WMI Perseistance via Event Consumer 
+
+status: Experimental 
+
+Discription: Detect use of WMI consumers which often leads persistence 
+
+Author: Manish Rawat 
+
+logsource: 
+    product: windows 
+    category: process_creation
+    service: Sysmon
+    definition: EventID 19, 20 and 21 are used
+
+
+detection:
+    selection:
+        EventID: 
+            - 19
+            - 20
+            - 21
+    selection_parents:
+        ParentImage |endswith
+            - \powershell.exe
+            - \cmd.exe
+            - \rundll32.exe
+    selection_user:
+        Target_Username|contains
+            - sales
+
+    condition: selection and selection_parents and selection_user
+
+level: high 
+
+tags: 
+    - attack.persistence
+    - attack.t546.003
+    - apt.apt29
